@@ -17,3 +17,9 @@ class Deck:
         
     def cards_remaining(self):
         return self.cards
+    
+    def revealed_cards(self):
+        total_deck = list(full_deck)
+        for card in self.cards_remaining:
+            total_deck.remove(card)
+        return total_deck
