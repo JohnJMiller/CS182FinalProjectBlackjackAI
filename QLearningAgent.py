@@ -98,7 +98,7 @@ class Agent(Player):
 
         return self.computeActionFromQValues(state)
 
-    def update(self, state, action, nextState, reward):
+    def update(self, state, action, nextState):
 
         # terminal state
         if nextState == "Done":
