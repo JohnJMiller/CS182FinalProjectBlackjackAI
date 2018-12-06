@@ -1,3 +1,6 @@
+import math, random, util
+import BlackjackPlayers.py
+
 class Agent(Player):
 
     def __init__(self, alpha=1.0, epsilon=0.05, gamma=0.8, numTraining = 10):
@@ -17,6 +20,17 @@ class Agent(Player):
         for feature in state:
             temp += state[feature] * weights[feature, action]
         return temp
+
+    def getLegalThings(self, state, inGame):
+        if inGame:
+            return self.getLegalActions(state)
+        # get legal bets
+        else:
+            money = state['total money (betting)']
+            if money <= 1.:
+                return [0.]
+            else:
+                return [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
         
     def getWeights(self):
         return self.weights
@@ -29,7 +43,7 @@ class Agent(Player):
         maxVal = -1 * float('inf')
 
         # list of legal actions
-        actions = self.getLegalActions(state)
+        actions = self.getLegalThings(state, inGame)
 
         # check if at terminal state
         if len(actions) == 0:
@@ -52,7 +66,27 @@ class Agent(Player):
         maxAction = None
 
         # list of legal actions
-        actions = self.getLegalActions(state)
+        actions = self.getLegalThings(state, inGame)
+
+        # check if at terminal state
+        if len(actions) == 0:
+          return None
+
+        for action in actions:
+          # compute q values for each action
+          qVal = self.getQValue(state, action)
+          if qVal > maxVal:
+            maxVal = qVal
+            maxAction = action
+
+        return maxAction
+
+    def computeActionFromQValues(self, state):
+        maxVal = -1 * float('inf')
+        maxAction = None
+
+        # list of legal actions
+        actions = self.getLegalThings(state, inGame)
 
         # check if at terminal state
         if len(actions) == 0:
@@ -68,7 +102,7 @@ class Agent(Player):
         return maxAction
 
     def getAction(self, state):
-        legalActions = self.getLegalActions(state)
+        legalActions = self.getLegalThings(state, inGame)
 
         if util.flipCoin(self.epsilon):
           return random.choice(legalActions)
