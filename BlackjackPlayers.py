@@ -62,11 +62,10 @@ class Hand(object):
 class Player(object):
 	'''The card player; agent inherits this class'''
 
-	def __init__(self, hands)
-	# A list of hands
-	self.hands = hands
-	self.doubledDown = False
-	self.split = False
+	def __init__(self, hands):
+        self.hands = hands
+        self.doubledDown = False
+        self.split = False
 
 	def getHands(self):
 		return self.hands
