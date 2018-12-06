@@ -20,17 +20,6 @@ class Agent(Player):
         for feature in state:
             temp += state[feature] * weights[feature, action]
         return temp
-
-    def getLegalThings(self, state, inGame):
-        if inGame:
-            return self.getLegalActions(state)
-        # get legal bets
-        else:
-            money = state['total money (betting)']
-            if money <= 1.:
-                return [0.]
-            else:
-                return [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
         
     def getWeights(self):
         return self.weights
