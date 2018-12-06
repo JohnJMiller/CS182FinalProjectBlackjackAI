@@ -3,11 +3,12 @@ import BlackjackPlayers
 
 #function to play a single round of blackjack
 #takes a list of players and a deck object
-def PlayRound(players,deck, AgentMoney,CurrentBet,ObservedCards):
+def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentState,in_PastAgentAction):
     #players is a list of players objects
     #deck is a deck object
     
-    
+    PastAgentState,PastAgentAction = in_PastAgentState,in_PastAgentAction
+    ObservedCards = in_ObservedCards
     #dealer draws cards until reaching 17
     dealer_hand = BlackjackPlayers.Hand()
     dealer_total = dealer_hand.getValue()
@@ -30,7 +31,8 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,ObservedCards):
     while rotation !=[]:
         for i in list(rotation):
             #take player out of rotation if they can't do anything else
-            if players[i].GetLegalActions() == [[]] or [[],[]]:
+            tempstate = GetGameStateOther(players,upcard,player_index=i)
+            if players[i].GetLegalThings(tempstate,inGame=1) == [[]] or [[],[]]:
                 rotation.remove(i)
                 continue
             for j in range(len(players[i].hands())):
@@ -39,7 +41,7 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,ObservedCards):
                 if i==AgentIndex:
                     #get current gamestate and update weights for previous action
                     GameState = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard)
-                    players[i].update(PastAgentState,GameState)
+                    players[i].update(PastAgentState,PastAgentAction,GameState)
                     
                 #if current player is not our agent
                 else:
@@ -53,6 +55,7 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,ObservedCards):
                 #save gamestate if this is the agent for use in next update
                 if i ==AgentIndex:
                     PastAgentState = GameState
+                    PastAgentAction = player_action
                 
                     #update observed cards if this is the agent and the agent hit or doubled down 
                     if player_action == "Hit" or player_action =="Double Down":
@@ -73,7 +76,7 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,ObservedCards):
                 player_list.append(0)
         result.append(player_list)
     
-    return result,PastAgentState
+    return result,PastAgentState, PastAgentAction
 
             
             
@@ -85,7 +88,7 @@ def PlayGame(MaxRounds=100,players,AgentIndex,AgentStartingMoney=1000):
     
     #Initialize gamestate
     PastAgentState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentStartingMoney, inGame=0,deck=GameDeck,ObservedCards=[],upcard='A')
-    
+    PastAgentAction = 'Initial'
     
     #this tracks the agent's money
     AgentMoney = AgentStartingMoney
@@ -101,8 +104,8 @@ def PlayGame(MaxRounds=100,players,AgentIndex,AgentStartingMoney=1000):
         
         
         #update gamestate and update weights
-        GameState = PastAgentState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentMoney, inGame=0,deck=GameDeck,ObservedCards=ObservedCards,upcard='A')
-        players[AgentIndex].update()
+        GameState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentMoney, inGame=0,deck=GameDeck,ObservedCards=ObservedCards,upcard='A')
+        players[AgentIndex].update(PastAgentState,PastAgentAction,GameState)
         
         #agent selects their bet
         CurrentBet = players[AgentIndex].MakeBet()
@@ -118,14 +121,14 @@ def PlayGame(MaxRounds=100,players,AgentIndex,AgentStartingMoney=1000):
         
         #play round
         inGame = 1
-        round_results,PastAgentState = PlayRound(players,GameDeck, AgentMoney,CurrentBet,ObservedCards)
+        round_results, PastAgentState, PastAgentAction = PlayRound(players,GameDeck, AgentMoney,CurrentBet,ObservedCards,PastAgentState,PastAgentAction)
         
         #update observed cards - we know which cards are left in the deck
         ObservedCards = deck.revealed_cards()
         
         #payout money to agent
         #double bet if the agent doubled down
-        if players[AgentIndex].getDoubledDown:
+        if players[AgentIndex].getDoubledDown():
             CurrentBet = 2*CurrentBet
         
         #we will also track the win rate
@@ -152,6 +155,7 @@ def PlayGame(MaxRounds=100,players,AgentIndex,AgentStartingMoney=1000):
                 hands_played+=1
     
     TerminalState = {'Terminal':AgentMoney}
+    
     
     
     return AgentMoney, WinRate
