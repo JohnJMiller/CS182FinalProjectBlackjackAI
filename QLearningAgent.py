@@ -7,15 +7,15 @@ class Agent(Player):
         self.discount = float(gamma)
         self.numTraining = int(numTraining)
 
-        self.qvals = util.Counter()
+        #self.qvals = util.Counter()
         self.weights = util.Counter()
         self.features = util.Counter()
 
     def getQValue(self, state, action):
 
         temp = 0
-        for feature in self.weights:
-            temp += features[state, action] * weights[feature]
+        for feature in state:
+            temp += state[feature] * weights[feature, action]
         return temp
         
     def getWeights(self):
@@ -84,10 +84,10 @@ class Agent(Player):
 
         difference = (reward + self.discount * self.getValue(nextState)) - self.getQValue(state, action)
         
-        self.qvals[state, action] += self.getQValue(state, action, isBet) + alpha * difference
+        #self.qvals[state, action] += self.getQValue(state, action, isBet) + alpha * difference
 
-        for feature in self.weights:
-            weights[feature] += difference
+        for feature in state:
+            self.weights[feature,action] += difference
 
     ####################################
     #    Read These Functions          #
