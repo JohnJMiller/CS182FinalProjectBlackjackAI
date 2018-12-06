@@ -1,6 +1,10 @@
 class BasicStrategyAgent(Player):
 
 	def __init__(self):
+		self.doubledDown = False
+		self.hands = [Hand([])]
+		self.split = False
+		
 		self.chart = {}
 
 		self.chart[["2","2"], "2"] = "Hit"

@@ -1,25 +1,34 @@
 #Deck object
-import random
+import random, copy
+from BlackjackPlayers import Card
 
-full_deck = ['A']*4 + ['2']*4 + ['3']*4 + ['4']*4 + ['5']*4 + ['6']*4 + ['7']*4 + ['8']*4 + ['9']*4 + ['10']*4 + ['J']*4 + ['Q']*4 + ['K']*4
+full_deck_strings = ['A']*4 + ['2']*4 + ['3']*4 + ['4']*4 + ['5']*4 + ['6']*4 + ['7']*4 + ['8']*4 + ['9']*4 + ['10']*4 + ['J']*4 + ['Q']*4 + ['K']*4
+full_deck = []
+
+for card in full_deck_strings:
+    full_deck.append(Card(card))
+
 random.shuffle(full_deck)
 
 class Deck:
     def __init__(self):
-        self.cards = full_deck
+        self.cards = copy.deepcopy(full_deck)
     
     def shuffle_deck(self):
-        self.cards = full_deck
+        self.cards = copy.deepcopy(full_deck)
         random.shuffle(self.cards)
     
     def draw_card(self):
-        return self.card.pop(0)
+        return self.cards.pop(0)
         
     def cards_remaining(self):
         return self.cards
     
     def revealed_cards(self):
-        total_deck = list(full_deck)
-        for card in self.cards_remaining:
-            total_deck.remove(card)
+        total_deck = copy.deepcopy(full_deck)
+        for card1 in self.cards_remaining():
+            for card2 in total_deck:
+                if card1.getName() == card2.getName():
+                    total_deck.remove(card2)
+
         return total_deck
