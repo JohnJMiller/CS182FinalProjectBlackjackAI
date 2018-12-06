@@ -25,7 +25,7 @@ class Agent(Player):
         return self.weights
 
     def actionsWithHandIndex(self, state, hand_index):
-    '''Gets list of legal actions given hand index'''
+        '''Gets list of legal actions given hand index'''
 
         # list of legal actions
         actions = None
