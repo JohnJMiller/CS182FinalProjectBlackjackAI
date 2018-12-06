@@ -455,6 +455,9 @@ class BasicStrategyAgent(Player):
 
 
 
+	def getLegalThings(self, state, inGame):
+		getLegalActions(self)
+
 	def getAction(self, state):
 		if state[hand], state[upcard] in self.chart:
 			return self.chart[state[hand], state[upcard]]

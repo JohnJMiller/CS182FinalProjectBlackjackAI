@@ -39,7 +39,7 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,ObservedCards):
                 if i==AgentIndex:
                     #get current gamestate and update weights for previous action
                     GameState = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard)
-                    players[j].updateWeights(PastAgentState,GameState)
+                    players[i].update(PastAgentState,GameState)
                     
                 #if current player is not our agent
                 else:
@@ -102,7 +102,7 @@ def PlayGame(MaxRounds=100,players,AgentIndex,AgentStartingMoney=1000):
         
         #update gamestate and update weights
         GameState = PastAgentState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentMoney, inGame=0,deck=GameDeck,ObservedCards=ObservedCards,upcard='A')
-        players[AgentIndex].updateWeights()
+        players[AgentIndex].update()
         
         #agent selects their bet
         CurrentBet = players[AgentIndex].MakeBet()
@@ -118,7 +118,7 @@ def PlayGame(MaxRounds=100,players,AgentIndex,AgentStartingMoney=1000):
         
         #play round
         inGame = 1
-        round_results,PastAgentState = PlayRound(players,GameDeck)
+        round_results,PastAgentState = PlayRound(players,GameDeck, AgentMoney,CurrentBet,ObservedCards)
         
         #update observed cards - we know which cards are left in the deck
         ObservedCards = deck.revealed_cards()
@@ -150,7 +150,10 @@ def PlayGame(MaxRounds=100,players,AgentIndex,AgentStartingMoney=1000):
             else:
                 AgentMoney -= CurrentBet
                 hands_played+=1
-                
+    
+    TerminalState = {'Terminal':AgentMoney}
+    
+    
     return AgentMoney, WinRate
         
 
@@ -273,6 +276,7 @@ def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck
     #REMINDER TO FILL IN HMM PART
     
     return GameState
+
     
 def GetGameStateOther(players,upcard,player_index)
     GameState = {}
