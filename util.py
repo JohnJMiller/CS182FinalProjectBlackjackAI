@@ -302,6 +302,8 @@ class Counter(dict):
         Returns the sum of counts for all keys.
         """
         return sum(self.values())
+    def absoluteCount(self):
+        return sum([abs(thing) for thing in self.values()])
 
     def normalize(self):
         """

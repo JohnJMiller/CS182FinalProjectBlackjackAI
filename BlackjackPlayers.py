@@ -2,7 +2,7 @@ import sys
 import random
 
 ''' Global Variables'''
-LIMIT = 26
+LIMIT = 21
 
 class Card(object):
 	def __init__(self, name):
@@ -22,7 +22,7 @@ class Hand(object):
 	def __init__(self, cards):
 		# List of cards
 		self.cards = cards
-		self.value = 0
+
 		self.num_cards = 0
 
 		self.num_aces = 0
@@ -34,11 +34,19 @@ class Hand(object):
 		# At init, all aces are soft
 		self.num_soft_aces = self.num_aces
 
+		self.value = 0
+		for card in self.cards:
+			self.value += card.value()
+		while self.value > 21 and self.num_soft_aces > 0:
+			self.value -= 10
+			self.num_soft_aces -= 1
+
 	def getCards(self):
 		return self.cards
 
 	# Value of hand is an int
 	def updateValue(self):
+		self.value = 0
 		for card in self.cards:
 			self.value += card.value()
 
@@ -72,12 +80,21 @@ class Player(object):
 		self.hands = hands
 		self.doubledDown = False
 		self.split = False
+		self.stand = False
 
 	def getHands(self):
 		return self.hands
+	
+	def resetPlayer(self):
+		self.hands = [Hand([])]
+		self.doubledDown = False
+		self.split = False
+		self.stand = False
 
 	def drawCard(self, hand_index, deck):
-		self.hands[hand_index].addCard(deck.draw_card())
+		card = deck.draw_card()
+		self.hands[hand_index].addCard(card)
+
 
 	def splittableHand(self):
 		# Splittable if (1) one hand, (2) hand has 2 cards (3) which are identical
@@ -88,27 +105,37 @@ class Player(object):
 		self.split = True
 
 	def getLegalActions(self):
+		# check if stood last round
+		if self.stand:
+			#print "We stood already"
+			return []
+
 		total_actions = []
 		for hand in self.hands:
 			# Temporary list of legal actions
 			actions = []
 
 			# If over 21, then bust
-			if hand.getValue() > LIMIT:
+			if hand.getValue() >= LIMIT:
+				#print "over limit"
 				continue
 
 			if hand.getValue() < LIMIT:
+				#print "under limit"
 				actions.append("Stand")
 
 				# Before we continue: if already doubled down, can only stand
 				if self.doubledDown:
+					#print "doubledDown"
 					continue
 
 				# Otherwise, can also hit
+				#print "we can hit"
 				actions.append("Hit")
 
 				# Can double down if hand size is 2, but can't double down if split
 				if hand.size() == 2 and not self.split:
+					#print "we can double down"
 					actions.append("Double Down")
 
 				# Splittable depending on set guidelines
@@ -116,6 +143,8 @@ class Player(object):
 					actions.append("Split")
 
 			total_actions.append(actions)
+
+		return total_actions
 
 	def getLegalThings(self, state, inGame):
 
@@ -125,10 +154,10 @@ class Player(object):
         # get legal bets
 		else:
 			money = state['total money (betting)']
-			if money <= 1.:
+			if money < 1.:
 				return [0.]
 			else:
-				return [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+				return [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 
 
@@ -140,11 +169,17 @@ class Player(object):
 		self.doubledDown = doubled 
 
 	def performAction(self, action, hand_index, deck):
-		# If we stand, nothing happens
-		if action == "Hit" or action == "Double Down":
-			self.draw_card(hand_index, deck)
+		#print "Performing action"
+		if action == "Stand":
+			self.stand = True
+		if action == "Hit":
+			self.drawCard(hand_index, deck)
+		if action == "Double Down":
+			self.drawCard(hand_index, deck)
+			self.doubledDown = True
 		if action == "Split":
 			self.splitHand()
+			self.split = True
 
 
 

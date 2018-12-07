@@ -1,12 +1,15 @@
 from BlackjackDeck import Deck
+from BlackjackPlayers import Card, Hand, Player
 import BlackjackPlayers
 
 #function to play a single round of blackjack
 #takes a list of players and a deck object
-def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentState,in_PastAgentAction):
+def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentState,in_PastAgentAction, AgentIndex):
 	#players is a list of players objects
 	#deck is a deck object
-	
+	# print "We're Playing Now"
+
+
 	PastAgentState,PastAgentAction = in_PastAgentState,in_PastAgentAction
 	ObservedCards = in_ObservedCards
 	#dealer draws cards until reaching 17
@@ -17,6 +20,8 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 		dealer_hand.addCard(deck.draw_card())
 		dealer_total = dealer_hand.getValue()
 
+	#print "Dealer Hand: ", [card.getName() for card in dealer_hand.getCards()]
+	#print "Dealer Total: ", dealer_total
 	# print "HELLO2"
 	
 	#dealer bust, all players win
@@ -25,12 +30,16 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 		results = []
 		for player in players:
 			results.append([1])
-		return results, PastAgentState, PastAgentAction
+		return results, PastAgentState, PastAgentAction, deck
 		
 	
 	for player in players:
-		player.drawCard(hand_index=0,deck=deck)
-		player.drawCard(hand_index=0,deck=deck)
+		for i in range(2):
+			#player.drawCard(hand_index=0,deck=deck)
+			#player.drawCard(hand_index=0,deck=deck)
+			card = deck.draw_card()
+			player.getHands()[0].addCard(card)
+			#print "Starting Hand: ", [card.getName() for card in player.getHands()[0].getCards()]
 	
 	upcard = dealer_hand.getCards()[0]
 	ObservedCards.append(upcard)
@@ -38,31 +47,58 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 	#this sets the play order
 	rotation = list(range(len(players)))
 
-	
-	while rotation !=[]:
-		for i in list(rotation):
+	NoMoreMoves = []
+
+	while len(NoMoreMoves) < len(rotation):
+		
+		for i in rotation:
+
 			# print "HELLO4", i
 			#take player out of rotation if they can't do anything else
-			tempstate = GetGameStateOther(players,upcard,player_index=i)
-			if players[i].getLegalThings(tempstate,inGame=1) == [[]] or [[],[]]:
-				rotation.remove(i)
+			if i==AgentIndex:
+				tempstate = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard)
+			else:
+				tempstate = GetGameStateOther(players = players,upcard = upcard,player_index = i)		
+
+				#print "Player Number: ", i
+				#print "Available Actions: ", players[i].getLegalThings(tempstate,inGame=1)
+			if players[i].getLegalThings(tempstate,inGame=1) == []:
+
+				NoMoreMoves.append(i)
 				continue
-			for j in range(len(players[i].hands())):
-				
+
+			#print "Rotation: ", rotation
+			if i in NoMoreMoves:
+				continue	
+			'''
+			if i ==AgentIndex:
+				tempstate2 = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard)
+			else:
+				tempstate2 = GetGameStateOther(players = players,upcard = upcard,player_index = i)		
+			'''
+			for j in range(len(players[i].getHands())):
+				#if players[i].getLegalThings(tempstate2, inGame=1)==[]:
+				#	continue
+			
 				#if current player is our agent
 				if i==AgentIndex:
 					#get current gamestate and update weights for previous action
 					GameState = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard)
-					players[i].update(PastAgentState,PastAgentAction,GameState, j)
+					#print "Hand Index: ",j
+					#print "Hands: ", players[i].getHands()
+					players[i].update(PastAgentState,PastAgentAction,GameState, j, inGame=1)
 					
 				#if current player is not our agent
 				else:
 					GameState = GetGameStateOther(players = players,upcard = upcard,player_index = i)
 				
+				# check if legal actions exist
+				# if players[i].getLegalThings()
 				#choose and perform action
-				player_action = player.getAction(hand_index = j,gamestate=GameState)
-				player.performAction(action=player_action,hand_index=j,deck=deck)
-				
+				player_action = players[i].getAction(hand_index = j,state=GameState, inGame=1)
+				#print "Player action: ", player_action
+				players[i].performAction(action=player_action,hand_index=j,deck=deck)
+				#print i, player_action
 				
 				#save gamestate if this is the agent for use in next update
 				if i ==AgentIndex:
@@ -71,8 +107,8 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 				
 					#update observed cards if this is the agent and the agent hit or doubled down 
 					if player_action == "Hit" or player_action =="Double Down":
-						ObservedCards.append(player[AgentIndex].getHands()[j].getCards()[-1])
-					
+						ObservedCards.append(players[AgentIndex].getHands()[j].getCards()[-1])
+						
 
 	# print "HELLO5"
 	#assign each player a 1 if they win, and a 0 if they lose (for each of their hands)
@@ -90,7 +126,11 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 				player_list.append(0)
 		result.append(player_list)
 	# print "result playgame", result
-	return result,PastAgentState, PastAgentAction
+
+	#for player in players:
+	#print "Final Hand: ", [card.getName() for card in player.getHands()[0].getCards()]
+
+	return result, PastAgentState, PastAgentAction, deck
 
 			
 			
@@ -101,12 +141,14 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 	ObservedCards = []
 	
 	#Initialize gamestate
-	PastAgentState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentStartingMoney, inGame=0,deck=GameDeck,ObservedCards=[],upcard='A')
+	PastAgentState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentStartingMoney, inGame=0,deck=GameDeck,ObservedCards=[],upcard=Card("A"))
 	PastAgentAction = 'Initial'
 	
 	#this tracks the agent's money
 	AgentMoney = AgentStartingMoney
 	
+	#print "Agent Money: ", AgentMoney
+	previousRoundEarnings = 0
 	#we will also track the win rate
 	hands_played = 0
 	hands_won = 0
@@ -119,19 +161,22 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 
 		#game ends if the agent has less than $1
 		if AgentMoney <= 1:
+			# print "Loser"
 			break
 		
 		
 		#update gamestate and update weights
-		GameState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentMoney, inGame=0,deck=GameDeck,ObservedCards=ObservedCards,upcard='A')
-		players[AgentIndex].update(PastAgentState,PastAgentAction,GameState, 5)
+		GameState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentMoney, inGame=0,deck=GameDeck,ObservedCards=ObservedCards,upcard=Card('A'))
+		players[AgentIndex].update(PastAgentState,PastAgentAction,GameState, 5, inGame=0,reward = previousRoundEarnings)
 		
 		#agent selects their bet
-		CurrentBet = players[AgentIndex].getAction(GameState, 5) * AgentMoney
+		CurrentBet = players[AgentIndex].getAction(GameState, 5, inGame=0) * AgentMoney
 		# print "action", players[AgentIndex].getAction(GameState, 5)
+		#print "current bet", CurrentBet
 		
 		#game ends if the agent stops betting
 		if CurrentBet == 0:
+			# print "Quitter"
 			break
 		
 		#shuffle deck if there are less than <= 26 cards left
@@ -141,7 +186,8 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 		
 		#play round
 		inGame = 1
-		round_results, PastAgentState, PastAgentAction = PlayRound(players,GameDeck, AgentMoney,CurrentBet,ObservedCards,PastAgentState,PastAgentAction)
+		#print "Cards Left: ", len(GameDeck.cards_remaining())
+		round_results, PastAgentState, PastAgentAction, GameDeck = PlayRound(players,GameDeck, AgentMoney,CurrentBet,ObservedCards,PastAgentState,PastAgentAction, AgentIndex)
 		
 		#update observed cards - we know which cards are left in the deck
 		ObservedCards = GameDeck.revealed_cards()
@@ -151,6 +197,12 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 		if players[AgentIndex].getDoubledDown():
 			CurrentBet = 2*CurrentBet
 		
+		#reset players
+		for player in players:
+			player.resetPlayer()
+			
+
+		previousRoundEarnings = 0
 		# print "round results", round_results
 
 		for result in round_results[AgentIndex]:
@@ -159,7 +211,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 			#win
 			if result==1:
 				AgentMoney += CurrentBet
-				
+				previousRoundEarnings += 1
 				hands_won+=1
 				hands_played+=1
 			
@@ -171,9 +223,12 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 			#lose        
 			else:
 				AgentMoney -= CurrentBet
+				previousRoundEarnings -= 1
 				hands_played+=1
 	
-	TerminalState = {'Terminal':AgentMoney}
+	TerminalState = {'Terminal': AgentMoney}
+	# print "Previous round earnings: ", previousRoundEarnings
+	players[AgentIndex].update(PastAgentState,PastAgentAction,TerminalState, 5, inGame=0,reward=previousRoundEarnings)
 	
 	WinRate = 0.
 	if hands_played != 0:
@@ -269,7 +324,7 @@ def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck
 	'K (revealed, betting)']
 	#initialize with zeros
 	for feature in FeatureList:
-		GameState[feature] = 0
+		GameState[feature] = 0.
 	
 	#revealed cards
 	for card in ObservedCards:
@@ -291,12 +346,12 @@ def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck
 			GameState[str(card.getName()) + ' (2nd hand)'] += 1*inGame
 			
 	#total_money and bet
-	GameState['Current Bet'] = current_bet*inGame
-	GameState['Total Money (playing)'] = total_money*inGame
-	GameState['total money (betting)'] = total_money*(1-inGame)
+	GameState['Current Bet'] = current_bet*inGame/total_money
+	GameState['Total Money (playing)'] = 0.#total_money*inGame
+	GameState['total money (betting)'] = 1. #total_money*(1-inGame)
 	
 	#Upcard
-	GameState[upcard + ' (upcard)'] += 1*inGame
+	GameState[upcard.getName() + ' (upcard)'] += 1*inGame
 	
 	#REMINDER TO FILL IN HMM PART
 	

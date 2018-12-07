@@ -3,31 +3,37 @@ from BlackjackPlayers import Player, Hand, Card
 
 class Agent(Player):
 
-	def __init__(self, hands = [Hand([])], alpha=1.0, epsilon=0.05, gamma=0.8, numTraining = 10):
+	def __init__(self, weights = util.Counter(), hands = [Hand([])], alpha=1.0, epsilon=0.05, gamma=0.8, numTraining = 10):
 
 		self.hands = hands
 		self.doubledDown = False
 		self.split = False
+		self.stand = False
 		self.alpha = float(alpha)
 		self.epsilon = float(epsilon)
 		self.discount = float(gamma)
 		self.numTraining = int(numTraining)
 
 		#self.qvals = util.Counter()
-		self.weights = util.Counter()
+		self.weights = weights
 		self.features = util.Counter()
 
 	def getQValue(self, state, action):
-
+		weightsum = 0
 		temp = 0
 		for feature in state:
+			#print "feature and weight", state[feature], self.weights[feature, action]
 			temp += state[feature] * self.weights[feature, action]
+			#print "Feature: ", state[feature]
+			#print "Weights: ", self.weights[feature, action]
+			weightsum += abs(self.weights[feature, action])
+		#print "Sum of Weights: ",weightsum
 		return temp
 		
 	def getWeights(self):
 		return self.weights
 
-	def actionsWithHandIndex(self, state, hand_index):
+	def actionsWithHandIndex(self, state, hand_index, inGame):
 		'''Gets list of legal actions given hand index'''
 
 		# list of legal actions
@@ -40,100 +46,117 @@ class Agent(Player):
 			# print "playing, hand index", hand_index
 			# list of legal actions for playing
 			actions = self.getLegalThings(state, inGame)[hand_index]
-
+			
 		# print "actions", actions
 		return actions
 
-	def getValue(self, state, hand_index):
+	def getValue(self, state, hand_index, inGame):
 		"""
 		V(s) = max_{a in actions} Q(s,a)
 		"""
 
-		maxVal = -1 * float('inf')
+		# maxVal = -1 * float('inf')
 
-		actions = self.actionsWithHandIndex(state, hand_index)
+		actions = self.actionsWithHandIndex(state, hand_index, inGame)
 
 		# check if at terminal state
 		if len(actions) == 0:
 		  return 0.
 
+		qlist = []
+
 		for action in actions:
 		  # compute q values for each action
-		  qVal = self.getQValue(state, action)
-		  if qVal > maxVal:
-			maxVal = qVal
+		  qlist.append(self.getQValue(state, action))
 
-		return maxVal
+		return max(qlist)
 
-	def getPolicy(self, state, hand_index):
+	def getPolicy(self, state, hand_index, inGame):
 		"""
 		policy(s) = arg_max_{a in actions} Q(s,a)
 		"""
 
-		maxVal = -1 * float('inf')
-		maxAction = None
+		#maxVal = -1 * float('inf')
+		#maxAction = None
 
 		# list of legal actions
-		actions = self.actionsWithHandIndex(state, hand_index)
+		actions = self.actionsWithHandIndex(state, hand_index, inGame)
 
 		# check if at terminal state
 		if len(actions) == 0:
 		  return None
-
+		tuplelist = []
 		for action in actions:
 		  # compute q values for each action
-		  qVal = self.getQValue(state, action)
-		  if qVal > maxVal:
-			maxVal = qVal
-			maxAction = action
+		  tuplelist.append((self.getQValue(state, action),action))
+		tuplelist.sort()
 
-		return maxAction
+		return tuplelist[-1][-1]
 
-	def computeActionFromQValues(self, state, hand_index):
-		maxVal = -1 * float('inf')
-		maxAction = None
+	def computeActionFromQValues(self, state, hand_index, inGame):
+		#maxVal = -1 * float('inf')
+		#maxAction = None
 
 		# list of legal actions
-		actions = self.actionsWithHandIndex(state, hand_index)
+		actions = self.actionsWithHandIndex(state, hand_index, inGame)
 
 		# check if at terminal state
 		if len(actions) == 0:
 		  return None
-
+		tuplelist = []
 		for action in actions:
 		  # compute q values for each action
-		  qVal = self.getQValue(state, action)
-		  if qVal > maxVal:
-			maxVal = qVal
-			maxAction = action
+		  tuplelist.append((self.getQValue(state, action),action))
+		tuplelist.sort()
 
-		return maxAction
+		return tuplelist[-1][-1]
 
-	def getAction(self, state, hand_index):
-		legalActions = self.actionsWithHandIndex(state, hand_index)
+	def getAction(self, state, hand_index, inGame):
+		#if inGame:
+		#print "GOT AGENT ACTION"
 
+		#else:
+		#print "GOT AGENT BET"
+		legalActions = self.actionsWithHandIndex(state, hand_index, inGame)
+		#print "AGENT LEGAL ACTIONS: ",legalActions
 		if util.flipCoin(self.epsilon):
 			return random.choice(legalActions)
 
-		return self.computeActionFromQValues(state, hand_index)
+		return self.computeActionFromQValues(state, hand_index, inGame)
 
-	def update(self, state, action, nextState, hand_index):
+	def update(self, state, action, nextState, hand_index, inGame=1, reward=1):
 
 		if state == "Initial":
 			return
 
-		difference = 0
+		difference = 0.
 
 		# terminal state
-		if nextState == "Terminal":
-			difference = (self.discount * nextState["Terminal"]) - self.getQValue(state, action)
+		if nextState.keys()[0] == "Terminal":
+			difference = (reward + self.discount * nextState["Terminal"]) - self.getQValue(state, action)
 		else:
-			difference = (self.discount * self.getValue(nextState, hand_index)) - self.getQValue(state, action)
+			difference = (reward + self.discount * self.getValue(nextState, hand_index, inGame)) - self.getQValue(state, action)
+			#print "Reward: ", reward
+			#print "max value: ", self.getValue(nextState, hand_index, inGame)
+			#print "q val: ", self.getQValue(state, action)
+
 		
 		#self.qvals[state, action] += self.getQValue(state, action, isBet) + alpha * difference
+		#print "Discount: ",self.discount
+		#try:
+		#	print "Value next state: ", self.getValue(nextState, hand_index)
+		#except:
+		#	pass
+		#print "Q value: ", self.getQValue(state, action)
 
+		#weightsum = 0
 		for feature in state:
 			self.weights[feature, action] += self.alpha * difference * state[feature]
+			#weightsum += abs(self.weights[feature, action])
+			#print "Feature and weight: ",feature,state[feature], self.weights[feature, action]
+			#print "difference: ", difference
+		# print "weight sum: ", weightsum
+			
 
 	####################################
 	#    Read These Functions          #

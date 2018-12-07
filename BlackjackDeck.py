@@ -11,15 +11,16 @@ for card in full_deck_strings:
 random.shuffle(full_deck)
 
 class Deck:
-    def __init__(self):
-        self.cards = copy.deepcopy(full_deck)
+    def __init__(self,cards=full_deck):
+        self.cards = copy.deepcopy(cards)
+        random.shuffle(self.cards)
     
     def shuffle_deck(self):
         self.cards = copy.deepcopy(full_deck)
         random.shuffle(self.cards)
     
     def draw_card(self):
-        return self.cards.pop(0)
+        return self.cards.pop()
         
     def cards_remaining(self):
         return self.cards
