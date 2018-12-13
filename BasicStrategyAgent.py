@@ -461,6 +461,23 @@ class BasicStrategyAgent(Player):
 		self.chart2[17, "A"] = "Stand"
 
 
+	def getCharts(self):
+		return (self.chart, self.chart2)
+
+	# def getHandsFromAction(self, upcard, action):
+	# 	hand_list = []
+	# 	sum_list = []
+
+	# 	# search for working tuples
+	# 	for tple, up in self.chart:
+	# 		if up == upcard and self.chart[tple, up] == action:
+	# 			hand_list.append(tple)
+
+	# 	# search for working values
+	# 	for val, up in self.chart:
+	# 		if up == upcard and self.chart[tple, up] == action:
+	# 			sum_list.append(val)
+	# 	return (hand_list, sum_list)
 
 	def getLegalThings(self, state, inGame):
 		return self.getLegalActions()
@@ -470,10 +487,14 @@ class BasicStrategyAgent(Player):
 		hand = self.hands[hand_index]
 		if len(hand.getCards()) == 2:
 			string_hand = (hand.getCards()[0].getName(), hand.getCards()[1].getName())
-			try:
-				if self.chart[(string_hand, state["Upcard"].getName())] in self.getLegalThings(state,inGame):
-					return self.chart[(string_hand, state["Upcard"].getName())]
-			except:
+			string_hand_rev = (hand.getCards()[1].getName(), hand.getCards()[0].getName())
+
+			if self.chart[(string_hand, state["Upcard"].getName())] in self.getLegalThings(state,inGame):
+				return self.chart[(string_hand, state["Upcard"].getName())]
+			elif self.chart[(string_hand_rev, state["Upcard"].getName())] in self.getLegalThings(state,inGame):
+					return self.chart[(string_hand_rev, state["Upcard"].getName())]
+			# try with value
+			else:
 				upcard = state["Upcard"].getName() 
 				if upcard == "K" or upcard == "Q" or upcard == "J":
 						upcard = "10"
