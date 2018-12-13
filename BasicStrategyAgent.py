@@ -446,6 +446,48 @@ class BasicStrategyAgent(Player):
 		self.chart2[16, "10"] = "Hit"
 		self.chart2[17, "10"] = "Stand"
 
+		self.chart2[5, "J"] = "Hit"
+		self.chart2[6, "J"] = "Hit"
+		self.chart2[7, "J"] = "Hit"
+		self.chart2[8, "J"] = "Hit"
+		self.chart2[9, "J"] = "Hit"
+		self.chart2[10, "J"] = "Hit"
+		self.chart2[11, "J"] = "Double Down"
+		self.chart2[12, "J"] = "Hit"
+		self.chart2[13, "J"] = "Hit"
+		self.chart2[14, "J"] = "Hit"
+		self.chart2[15, "J"] = "Hit"
+		self.chart2[16, "J"] = "Hit"
+		self.chart2[17, "J"] = "Stand"
+
+		self.chart2[5, "Q"] = "Hit"
+		self.chart2[6, "Q"] = "Hit"
+		self.chart2[7, "Q"] = "Hit"
+		self.chart2[8, "Q"] = "Hit"
+		self.chart2[9, "Q"] = "Hit"
+		self.chart2[10, "Q"] = "Hit"
+		self.chart2[11, "Q"] = "Double Down"
+		self.chart2[12, "Q"] = "Hit"
+		self.chart2[13, "Q"] = "Hit"
+		self.chart2[14, "Q"] = "Hit"
+		self.chart2[15, "Q"] = "Hit"
+		self.chart2[16, "Q"] = "Hit"
+		self.chart2[17, "Q"] = "Stand"
+
+		self.chart2[5, "K"] = "Hit"
+		self.chart2[6, "K"] = "Hit"
+		self.chart2[7, "K"] = "Hit"
+		self.chart2[8, "K"] = "Hit"
+		self.chart2[9, "K"] = "Hit"
+		self.chart2[10, "K"] = "Hit"
+		self.chart2[11, "K"] = "Double Down"
+		self.chart2[12, "K"] = "Hit"
+		self.chart2[13, "K"] = "Hit"
+		self.chart2[14, "K"] = "Hit"
+		self.chart2[15, "K"] = "Hit"
+		self.chart2[16, "K"] = "Hit"
+		self.chart2[17, "K"] = "Stand"
+
 		self.chart2[5, "A"] = "Hit"
 		self.chart2[6, "A"] = "Hit"
 		self.chart2[7, "A"] = "Hit"
@@ -483,44 +525,69 @@ class BasicStrategyAgent(Player):
 		return self.getLegalActions()
 
 	def getAction(self, state, hand_index,inGame):
+		# print "START"
 		#print "GOT OTHER ACTION"
 		hand = self.hands[hand_index]
 		if len(hand.getCards()) == 2:
+
+			# print "IF1"
 			string_hand = (hand.getCards()[0].getName(), hand.getCards()[1].getName())
 			string_hand_rev = (hand.getCards()[1].getName(), hand.getCards()[0].getName())
 
-			if self.chart[(string_hand, state["Upcard"].getName())] in self.getLegalThings(state,inGame):
-				return self.chart[(string_hand, state["Upcard"].getName())]
-			elif self.chart[(string_hand_rev, state["Upcard"].getName())] in self.getLegalThings(state,inGame):
+			if (string_hand, state["Upcard"].getName()) in self.chart:
+				# print "IF2"
+				# check if a legal action
+				if self.chart[(string_hand, state["Upcard"].getName())] in self.getLegalThings(state, inGame):
+					return self.chart[(string_hand, state["Upcard"].getName())]
+			elif (string_hand_rev, state["Upcard"]) in self.chart:
+				# print "ELIF1"
+				# check if a legal action
+				if self.chart[(string_hand_rev, state["Upcard"].getName())] in self.getLegalThings(state, inGame):
 					return self.chart[(string_hand_rev, state["Upcard"].getName())]
+
 			# try with value
 			else:
+				# print "else1"
+				# print "hand value ", state["Hand"][hand_index].getValue()
 				upcard = state["Upcard"].getName() 
 				if upcard == "K" or upcard == "Q" or upcard == "J":
-						upcard = "10"
-				if hand.getValue() > 17:
-					if self.chart2[17, upcard]:
-						return self.chart2[17, upcard]
-				elif self.chart2[state["Hand"][hand_index].getValue(), upcard] in self.getLegalThings(state,inGame):
+					upcard = "10"
+					# print "hand value ", state["Hand"][hand_index].getValue()
+				if hand.getValue() >= 17:
+					if (17, upcard) in self.chart2:
+						# check if legal action
+						if self.chart2[17, upcard] in self.getLegalThings(state, inGame):
+							return self.chart2[17, upcard]
+				if (state["Hand"][hand_index].getValue(), upcard) in self.chart2:
+					if self.chart2[state["Hand"][hand_index].getValue(), upcard] in self.getLegalThings(state,inGame):
 						return self.chart2[state["Hand"].getValue(), upcard]
+
 				# temp fix
-				return "Stand"
+				else:
+					# print "else2"
+					return "Stand"
 
 
 		else:
+			# print "else2"
+			# print "hand value ", state["Hand"][hand_index].getValue()
 			upcard = state["Upcard"].getName() 
 			if upcard == "K" or upcard == "Q" or upcard == "J":
-					upcard = "10"
-			if hand.getValue() > 17:
-				if self.chart2[17, upcard]:
-					return self.chart2[17, upcard]
-			elif self.chart2[state["Hand"][hand_index].getValue(), upcard] in self.getLegalThings(state,inGame):
+				upcard = "10"
+				# print "hand value ", state["Hand"][hand_index].getValue()
+			if hand.getValue() >= 17:
+				if (17, upcard) in self.chart2:
+					# check if legal action
+					if self.chart2[17, upcard] in self.getLegalThings(state, inGame):
+						return self.chart2[17, upcard]
+			if (state["Hand"][hand_index].getValue(), upcard) in self.chart2:
+				if self.chart2[state["Hand"][hand_index].getValue(), upcard] in self.getLegalThings(state,inGame):
 					return self.chart2[state["Hand"].getValue(), upcard]
-			# temp fix
-			return "Stand"
 
-		# temp fix
-		return "Stand"
+			# temp fix
+			else:
+				# print "else2"
+				return "Stand"
 
 
 		# if state[hand], state[upcard] in self.chart:

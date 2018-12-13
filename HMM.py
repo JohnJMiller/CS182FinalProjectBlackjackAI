@@ -4,19 +4,19 @@ import BasicStrategyAgent
 import BlackjackPlayers
 
 class HMM:
-    def __init__(self,n_other_players,upcard):
+    def __init__(self,n_other_players):
         self.beliefs = []
         for i in range(n_other_players):
             self.beliefs.append(util.Counter())
         self.CardProbs = []
         self.n_other_players = n_other_players
-        self.upcard = upcard
+        self.upcard = None
         
-        charts = BasicStrategyAgent().getCharts()
+        charts = BasicStrategyAgent.BasicStrategyAgent().getCharts()
         self.chart1 = charts[0]
         self.chart2 = charts[1]
         
-    def GetCardProbs(self,deck):
+    def GetCardNumbers(self,deck):
         n_cards_remaining = len(deck.cards_remaining())
         temp_beliefs = util.Counter()
         
@@ -26,9 +26,16 @@ class HMM:
         for name in card_names:
             card_count[name] = deck.cards_remaining_by_name(name)
         
-        card_count.normalize()
-        
         self.CardProbs = card_count
+
+    def SetUpcard(self, upcard):
+        self.upcard = upcard
+
+    def RemoveCard(self, card):
+        self.CardProbs[card] -= 1
+
+    def CardCountToProb(self):
+        self.CardProbs.normalize()
     
     def InitializePrior(self):
         card_names = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"]
@@ -39,11 +46,11 @@ class HMM:
                         self.beliefs[i][(name1,name2),self.upcard] += 2*self.CardProbs[name1]*self.CardProbs[name2]
                     else:
                         self.beliefs[i][(name1,name2),self.upcard] += self.CardProbs[name1]*self.CardProbs[name2]
-        for i in range(n_other_players):
+        for i in range(self.n_other_players):
             self.beliefs[i].normalize()
     
     
-    def UpdateBelief(self,player_index,action,hand_index):
+    def UpdateBelief(self,player_index,action):
         #NOTE: THIS IS ONLY TO BE USED ON THE FIRST PASS THROUGH ALL PLAYERS
         
         card_names = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"]
@@ -77,7 +84,7 @@ class HMM:
                             self.beliefs[player_index][((name1,name2),self.upcard)] = 0
                             self.beliefs[player_index][((name2,name1),self.upcard)] = 0
                     
-                    elif self.chart2[hand_value,upcard] == action:
+                    elif self.chart2[hand_value,self.upcard] == action:
                         continue
                     else:
                         self.beliefs[player_index][((name1,name2),self.upcard)] = 0
@@ -88,9 +95,10 @@ class HMM:
     def GetExpectations(self):
         
         Expectations = util.Counter()
-    
-        for hand,upcard in self.beliefs.sortedKeys():
-            for card in hand:
-                Expectations[card] += self.beliefs[(hand,upcard)]
+
+        for player_dict in self.beliefs:
+            for hand,upcard in player_dict.sortedKeys():
+                for card in hand:
+                    Expectations[card] += player_dict[(hand,upcard)]
         
         return Expectations

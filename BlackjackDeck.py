@@ -34,7 +34,7 @@ class Deck:
 
         return total_deck
     
-    def cards_remaining_by_name(name)
+    def cards_remaining_by_name(self, name):
         n = 0
         for card in self.cards_remaining():
             if card.getName() == name:

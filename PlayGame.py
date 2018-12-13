@@ -1,6 +1,7 @@
 from BlackjackDeck import Deck
 from BlackjackPlayers import Card, Hand, Player
 import BlackjackPlayers
+import HMM
 
 #function to play a single round of blackjack
 #takes a list of players and a deck object
@@ -12,6 +13,12 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 
 	PastAgentState,PastAgentAction = in_PastAgentState,in_PastAgentAction
 	ObservedCards = in_ObservedCards
+
+	AgentHMM = HMM.HMM(len(players)-1)
+
+	# before dealer draws, get state of deck
+	AgentHMM.GetCardNumbers(deck)
+
 	#dealer draws cards until reaching 17
 	dealer_hand = BlackjackPlayers.Hand([])
 	dealer_total = dealer_hand.getValue()
@@ -33,30 +40,46 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 		return results, PastAgentState, PastAgentAction, deck
 		
 	
-	for player in players:
+	for p in range(len(players)):
 		for i in range(2):
 			#player.drawCard(hand_index=0,deck=deck)
 			#player.drawCard(hand_index=0,deck=deck)
 			card = deck.draw_card()
-			player.getHands()[0].addCard(card)
+			players[p].getHands()[0].addCard(card)
 			#print "Starting Hand: ", [card.getName() for card in player.getHands()[0].getCards()]
+
+			# remove from deck the cards in our hand
+			if p == AgentIndex:
+				AgentHMM.RemoveCard(card.getName())
 	
 	upcard = dealer_hand.getCards()[0]
 	ObservedCards.append(upcard)
+
+	AgentHMM.SetUpcard(upcard.getName())
+
+	AgentHMM.RemoveCard(upcard.getName())
+
+	# normalize HMM
+	AgentHMM.CardCountToProb()
+
+	AgentHMM.InitializePrior()
 	
 	#this sets the play order
 	rotation = list(range(len(players)))
 
 	NoMoreMoves = []
 
+	turn_count = 0
+
 	while len(NoMoreMoves) < len(rotation):
+		turn_count += 1
 		
 		for i in rotation:
 
 			# print "HELLO4", i
 			#take player out of rotation if they can't do anything else
 			if i==AgentIndex:
-				tempstate = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard)
+				tempstate = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard, agentHMM=AgentHMM)
 			else:
 				tempstate = GetGameStateOther(players = players,upcard = upcard,player_index = i)		
 
@@ -83,7 +106,7 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 				#if current player is our agent
 				if i==AgentIndex:
 					#get current gamestate and update weights for previous action
-					GameState = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard)
+					GameState = GetGameStateAgent(players=players, AgentIndex=AgentIndex, current_bet=CurrentBet, total_money=AgentMoney,inGame = 1,deck = deck,ObservedCards=ObservedCards,upcard=upcard,agentHMM=AgentHMM)
 					#print "Hand Index: ",j
 					#print "Hands: ", players[i].getHands()
 					players[i].update(PastAgentState,PastAgentAction,GameState, j, inGame=1)
@@ -99,6 +122,7 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 				#print "Player action: ", player_action
 				players[i].performAction(action=player_action,hand_index=j,deck=deck)
 				#print i, player_action
+
 				
 				#save gamestate if this is the agent for use in next update
 				if i ==AgentIndex:
@@ -108,7 +132,11 @@ def PlayRound(players,deck, AgentMoney,CurrentBet,in_ObservedCards,in_PastAgentS
 					#update observed cards if this is the agent and the agent hit or doubled down 
 					if player_action == "Hit" or player_action =="Double Down":
 						ObservedCards.append(players[AgentIndex].getHands()[j].getCards()[-1])
-						
+				else:
+					if turn_count == 1:
+						# update HMM for first round only
+						AgentHMM.UpdateBelief(i, player_action)
+
 
 	# print "HELLO5"
 	#assign each player a 1 if they win, and a 0 if they lose (for each of their hands)
@@ -141,7 +169,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 	ObservedCards = []
 	
 	#Initialize gamestate
-	PastAgentState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentStartingMoney, inGame=0,deck=GameDeck,ObservedCards=[],upcard=Card("A"))
+	PastAgentState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentStartingMoney, inGame=0,deck=GameDeck,ObservedCards=[],upcard=Card("A"), agentHMM=HMM.HMM(len(players)-1))
 	PastAgentAction = 'Initial'
 	
 	#this tracks the agent's money
@@ -166,7 +194,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 		
 		
 		#update gamestate and update weights
-		GameState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentMoney, inGame=0,deck=GameDeck,ObservedCards=ObservedCards,upcard=Card('A'))
+		GameState = GetGameStateAgent(players, AgentIndex, current_bet = 0, total_money=AgentMoney, inGame=0,deck=GameDeck,ObservedCards=ObservedCards,upcard=Card('A'),agentHMM=HMM.HMM(len(players)-1))
 		players[AgentIndex].update(PastAgentState,PastAgentAction,GameState, 5, inGame=0,reward = previousRoundEarnings)
 		
 		#agent selects their bet
@@ -237,7 +265,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 	return AgentMoney, WinRate
 		
 
-def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck,ObservedCards,upcard):
+def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck,ObservedCards,upcard, agentHMM):
 	#returns a dictionary of features indexed by strings
 	GameState = {}
 	FeatureList = ['Current Bet',
@@ -354,6 +382,8 @@ def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck
 	GameState[upcard.getName() + ' (upcard)'] += 1*inGame
 	
 	#REMINDER TO FILL IN HMM PART
+	for key, value in agentHMM.GetExpectations().items():
+		GameState['HMM ' + key] += value
 	
 	return GameState
 
