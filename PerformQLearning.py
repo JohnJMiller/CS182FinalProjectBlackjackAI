@@ -9,13 +9,13 @@ import util
 from BasicStrategyAgent import BasicStrategyAgent
 import numpy as np
 
-n_episodes = 10000
+n_episodes = 1000
 max_rounds = 10
 starting_money = 1000
 
 weights = util.Counter()
 # 0.0001, 0.1, 0.000001
-Q_learning_agent = QLearningAgent.Agent(alpha=.1,epsilon = .5,gamma=0.001)
+Q_learning_agent = QLearningAgent.Agent(alpha=.01,epsilon = .5,gamma=0.00001)
 
 win_rates = []
 earnings = []

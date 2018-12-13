@@ -240,7 +240,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 			#win
 			if result==1:
 				AgentMoney += CurrentBet
-				previousRoundEarnings += 4
+				previousRoundEarnings += 1
 				hands_won+=1
 				hands_played+=1
 			
@@ -252,7 +252,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 			#lose		 
 			else:
 				AgentMoney -= CurrentBet
-				previousRoundEarnings -= 4
+				previousRoundEarnings -= 1
 				hands_played+=1
 	
 	TerminalState = {'Terminal': AgentMoney}
