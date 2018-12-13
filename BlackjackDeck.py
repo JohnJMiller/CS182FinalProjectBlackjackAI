@@ -33,3 +33,10 @@ class Deck:
                     total_deck.remove(card2)
 
         return total_deck
+    
+    def cards_remaining_by_name(name)
+        n = 0
+        for card in self.cards_remaining():
+            if card.getName() == name:
+                n += 1
+        return n
