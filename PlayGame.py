@@ -248,7 +248,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 				hands_tied += 1
 				hands_played += 1
 			
-			#lose        
+			#lose		 
 			else:
 				AgentMoney -= CurrentBet
 				previousRoundEarnings -= 1
@@ -309,19 +309,6 @@ def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck
 	'HMM J',
 	'HMM Q',
 	'HMM K',
-	'A (upcard)',
-	'2 (upcard)',
-	'3 (upcard)',
-	'4 (upcard)',
-	'5 (upcard)',
-	'6 (upcard)',
-	'7 (upcard)',
-	'8 (upcard)',
-	'9 (upcard)',
-	'10 (upcard)',
-	'J (upcard)',
-	'Q (upcard)',
-	'K (upcard)',
 	'Split hand',
 	'A (2nd hand)',
 	'2 (2nd hand)',
@@ -335,28 +322,26 @@ def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck
 	'10 (2nd hand)',
 	'J (2nd hand)',
 	'Q (2nd hand)',
-	'K (2nd hand)',
-	'total money (betting)',
-	'A (revealed, betting)',
-	'2 (revealed, betting)',
-	'3 (revealed, betting)',
-	'4 (revealed, betting)',
-	'5 (revealed, betting)',
-	'6 (revealed, betting)',
-	'7 (revealed, betting)',
-	'8 (revealed, betting)',
-	'9 (revealed, betting)',
-	'10 (revealed, betting)',
-	'J (revealed, betting)',
-	'Q (revealed, betting)',
-	'K (revealed, betting)']
-	#initialize with zeros
+	'K (2nd hand)']
+	
+	FeatureList2=['total money (betting)','A (revealed, betting)','2 (revealed, betting)','3 (revealed, betting)','4 (revealed, betting)','5 (revealed, betting)','6 (revealed, betting)','7 (revealed, betting)','8 (revealed, betting)','9 (revealed, betting)','10 (revealed, betting)','J (revealed, betting)','Q (revealed, betting)','K (revealed, betting)']
+	
+	card_names = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"]
+	
+	#initialize with zeros - game phase
 	for feature in FeatureList:
-		GameState[feature] = 0.
+		for name in card_names:
+			GameState[feature + ' (Upcard ' + name + ')'] = 0.
+	
+	#initialize with zeros - betting phase
+	for feature in FeatureList2:
+		GameState[feature] = 0
+	
+	upcard_name = upcard.getName()
 	
 	#revealed cards
 	for card in ObservedCards:
-		GameState[str(card.getName()) + ' (revealed, playing)'] += 1*inGame
+		GameState[str(card.getName()) + ' (revealed, playing)' + ' (Upcard ' + upcard_name + ')'] += 1*inGame
 		GameState[str(card.getName()) + ' (revealed, betting)'] += 1*(1-inGame)
 	
 	#player's hand
@@ -364,26 +349,29 @@ def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck
 	
 	#primary hand
 	for card in agent_hand[0].getCards():
-		GameState[str(card.getName()) + ' (in hand)'] += 1*inGame
+		GameState[str(card.getName()) + ' (in hand)' + ' (Upcard ' + name + ')'] += 1*inGame
 	
 	
 	#check for secondary hand
 	if len(agent_hand) == 2:
-		GameState['Split hand'] += 1*inGame
+		GameState['Split hand' + ' (Upcard ' + name + ')'] += 1*inGame
 		for card in agent_hand[1].getCards():
-			GameState[str(card.getName()) + ' (2nd hand)'] += 1*inGame
+			GameState[str(card.getName()) + ' (2nd hand)' + ' (Upcard ' + name + ')'] += 1*inGame
 			
+	
+	##Upcard
+	#GameState[upcard.getName() + ' (upcard)'] += 1*inGame
+	
+	#REMINDER TO FILL IN HMM PART
+	for key, value in agentHMM.GetExpectations().items():
+		GameState['HMM ' + key + ' (Upcard ' + name + ')'] += value
+	
 	#total_money and bet
 	GameState['Current Bet'] = current_bet*inGame/total_money
 	GameState['Total Money (playing)'] = 0.#total_money*inGame
 	GameState['total money (betting)'] = 1. #total_money*(1-inGame)
 	
-	#Upcard
-	GameState[upcard.getName() + ' (upcard)'] += 1*inGame
 	
-	#REMINDER TO FILL IN HMM PART
-	for key, value in agentHMM.GetExpectations().items():
-		GameState['HMM ' + key] += value
 	
 	return GameState
 
