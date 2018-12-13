@@ -523,7 +523,6 @@ class BasicStrategyAgent(Player):
 		return "Stand"
 
 
-
 		# if state[hand], state[upcard] in self.chart:
 		# 	return self.chart[state[hand], state[upcard]]
 		
