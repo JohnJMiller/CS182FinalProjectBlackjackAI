@@ -16,6 +16,13 @@ import sys
 import inspect
 import heapq, random
 import cStringIO
+import numpy as np
+
+def CumulativeAverage(array):
+    cum_avg = []
+    for i in range(len(array)):
+        cum_avg.append(np.mean(array[:i+1]))
+    return cum_avg
 
 
 class FixedRandom:

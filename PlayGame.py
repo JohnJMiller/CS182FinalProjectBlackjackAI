@@ -186,6 +186,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 
 	#play MaxRounds hands of blackjack
 	for r in range(MaxRounds):
+		round_no = r
 
 		#game ends if the agent has less than $1
 		if AgentMoney <= 1:
@@ -239,7 +240,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 			#win
 			if result==1:
 				AgentMoney += CurrentBet
-				previousRoundEarnings += 1
+				previousRoundEarnings += 4
 				hands_won+=1
 				hands_played+=1
 			
@@ -251,7 +252,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 			#lose		 
 			else:
 				AgentMoney -= CurrentBet
-				previousRoundEarnings -= 1
+				previousRoundEarnings -= 4
 				hands_played+=1
 	
 	TerminalState = {'Terminal': AgentMoney}
@@ -262,7 +263,7 @@ def PlayGame(MaxRounds,players,AgentIndex,AgentStartingMoney):
 	if hands_played != 0:
 		WinRate = hands_won * 1. / hands_played
 
-	return AgentMoney, WinRate
+	return AgentMoney, WinRate, round_no
 		
 
 def GetGameStateAgent(players, AgentIndex, current_bet, total_money, inGame,deck,ObservedCards,upcard, agentHMM):
