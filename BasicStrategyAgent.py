@@ -1,3 +1,8 @@
+'''
+Basic Strategy Agent
+Alice Liu, John Miller
+'''
+
 from BlackjackPlayers import Card, Hand, Player
 
 class BasicStrategyAgent(Player):

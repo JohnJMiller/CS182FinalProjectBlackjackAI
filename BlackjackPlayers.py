@@ -1,3 +1,8 @@
+'''
+Card, Hand, and Player objects
+Alice Liu, John Miller
+'''
+
 import sys
 import random
 

@@ -1,3 +1,8 @@
+'''
+Performs the Q learning--training, testing, and random agent
+John Miller, Alice Liu
+'''
+
 #Actually perform training
 import QLearningAgent
 import PlayGame
@@ -9,13 +14,18 @@ import util
 from BasicStrategyAgent import BasicStrategyAgent
 import numpy as np
 
-n_episodes = 1000
+
+'''
+Q-Learning Agent
+'''
+
+n_episodes = 100
 max_rounds = 10
 starting_money = 1000
 
 weights = util.Counter()
 # 0.0001, 0.1, 0.000001
-Q_learning_agent = QLearningAgent.Agent(alpha=.01,epsilon = .5,gamma=0.00001)
+Q_learning_agent = QLearningAgent.Agent(alpha=.01,epsilon = .2,gamma=0.00001)
 
 win_rates = []
 earnings = []
@@ -54,14 +64,14 @@ plt.ylabel('Rounds Won')
 plt.show()
 
 plt.plot(range(n_episodes),earnings)
-plt.ylim(-35000,35000)
+# plt.ylim(-35000,35000)
 plt.title('Ending Money: Train')
 plt.xlabel('Iteration')
 plt.ylabel('Ending Money')
 plt.show()
 
 plt.plot(range(n_episodes),cumulative_avg_earnings_train)
-plt.ylim(-35000,35000)
+# plt.ylim(-35000,35000)
 plt.title('Cumulative Avg Ending Money: Train')
 plt.xlabel('Iteration')
 plt.ylabel('Ending Money')
@@ -73,57 +83,57 @@ plt.title('Walking Away: Train')
 plt.show()
 
 '''
-Test
+Testing Agent
 '''
 
-n_episodes_test = 1000
-win_rates_test = []
-earnings_test = []
-weight_sum_test= []
-rounds_test = []
+# n_episodes_test = 20000
+# win_rates_test = []
+# earnings_test = []
+# weight_sum_test= []
+# rounds_test = []
 
-Q_learning_agent_test = QLearningAgent.Agent(weights=weights, alpha=0.,epsilon = 0.,gamma=.9)
+# Q_learning_agent_test = QLearningAgent.Agent(weights=weights, alpha=0.,epsilon = 0.,gamma=.9)
 
-for i in tqdm(range(n_episodes_test)):
-	PlayerList = [BasicStrategyAgent(),BasicStrategyAgent(),Q_learning_agent_test]
-	agent_money, win_rate, no_rounds = PlayGame.PlayGame(MaxRounds=max_rounds,players = PlayerList,AgentIndex = 2,AgentStartingMoney=starting_money)
+# for i in tqdm(range(n_episodes_test)):
+# 	PlayerList = [BasicStrategyAgent(),BasicStrategyAgent(),Q_learning_agent_test]
+# 	agent_money, win_rate, no_rounds = PlayGame.PlayGame(MaxRounds=max_rounds,players = PlayerList,AgentIndex = 2,AgentStartingMoney=starting_money)
 	
-	#track results
-	win_rates_test.append(win_rate)
-	earnings_test.append(agent_money)
-	weight_sum_test.append(Q_learning_agent_test.getWeights().totalCount())
-	rounds_test.append(no_rounds)
+# 	#track results
+# 	win_rates_test.append(win_rate)
+# 	earnings_test.append(agent_money)
+# 	weight_sum_test.append(Q_learning_agent_test.getWeights().totalCount())
+# 	rounds_test.append(no_rounds)
 	
-plt.plot(range(n_episodes_test),earnings_test)
-plt.ylim(-35000,35000)
-plt.title('Ending Money: Test')
-plt.xlabel('Iteration')
-plt.ylabel('Ending Money')
-plt.show()
+# plt.plot(range(n_episodes_test),earnings_test)
+# # plt.ylim(-35000,35000)
+# plt.title('Ending Money: Test')
+# plt.xlabel('Iteration')
+# plt.ylabel('Ending Money')
+# plt.show()
 
-plt.plot(range(n_episodes_test),win_rates_test)
-plt.title('Win Rates: Test')
-plt.xlabel('Iteration')
-plt.ylabel('Rounds Won')
-plt.show()
+# plt.plot(range(n_episodes_test),win_rates_test)
+# plt.title('Win Rates: Test')
+# plt.xlabel('Iteration')
+# plt.ylabel('Rounds Won')
+# plt.show()
 
-plt.hist(rounds_test)
-plt.title('Walking Away: Test')
-plt.show()
+# plt.hist(rounds_test)
+# plt.title('Walking Away: Test')
+# plt.show()
 
-cumulative_avg_earnings_train_test = util.CumulativeAverage(earnings_test)
-plt.plot(range(n_episodes_test),cumulative_avg_earnings_train_test)
-plt.ylim(-35000,35000)
-plt.title('Cumulative Avg Ending Money: Test')
-plt.xlabel('Iteration')
-plt.ylabel('Ending Money')
-plt.show()
+# cumulative_avg_earnings_train_test = util.CumulativeAverage(earnings_test)
+# plt.plot(range(n_episodes_test),cumulative_avg_earnings_train_test)
+# # plt.ylim(-35000,35000)
+# plt.title('Cumulative Avg Ending Money: Test')
+# plt.xlabel('Iteration')
+# plt.ylabel('Ending Money')
+# plt.show()
 
 '''
 Random Agent
 '''
 
-n_episodes_rand = 1000
+n_episodes_rand = 20000
 win_rates_rand = []
 earnings_rand = []
 weight_sum_rand= []
@@ -142,7 +152,7 @@ for i in tqdm(range(n_episodes_rand)):
 	rounds_rand.append(no_rounds)
 	
 plt.plot(range(n_episodes_rand),earnings_rand)
-plt.ylim(-35000,35000)
+# plt.ylim(-35000,35000)
 plt.title('Ending Money: Random Agent')
 plt.xlabel('Iteration')
 plt.ylabel('Ending Money')
@@ -160,11 +170,11 @@ plt.show()
 
 cumulative_avg_earnings_train_rand = util.CumulativeAverage(earnings_rand)
 plt.plot(range(n_episodes_rand),cumulative_avg_earnings_train_rand)
-plt.ylim(-35000,35000)
+# plt.ylim(-35000,35000)
 plt.title('Cumulative Avg Ending Money: Random Agent')
 plt.xlabel('Iteration')
 plt.ylabel('Ending Money')
 plt.show()
 
-print "Mean Ending Money - Test: ", np.mean(earnings_test)
+# print "Mean Ending Money - Test: ", np.mean(earnings_test)
 print "Mean Ending Money - Random: ", np.mean(earnings_rand)

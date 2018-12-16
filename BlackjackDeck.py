@@ -1,4 +1,9 @@
-#Deck object
+'''
+Deck Object
+John Miller, Alice Liu
+'''
+
+
 import random, copy
 from BlackjackPlayers import Card
 

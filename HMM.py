@@ -1,4 +1,9 @@
-#HMM
+'''
+HMM (used for feature-based Q learning)
+John Miller, Alice Liu
+'''
+
+
 import util
 import BasicStrategyAgent
 import BlackjackPlayers
@@ -16,6 +21,7 @@ class HMM:
         self.chart1 = charts[0]
         self.chart2 = charts[1]
         
+    # for each card in deck, gets number of remaining cards
     def GetCardNumbers(self,deck):
         n_cards_remaining = len(deck.cards_remaining())
         temp_beliefs = util.Counter()
@@ -28,15 +34,19 @@ class HMM:
         
         self.CardProbs = card_count
 
+    # sets upcard to passed-in upcard
     def SetUpcard(self, upcard):
         self.upcard = upcard
 
+    # before normalizing, removes card from the count--used for upcard
     def RemoveCard(self, card):
         self.CardProbs[card] -= 1
 
+    # normalizes the Counter to get probabilities
     def CardCountToProb(self):
         self.CardProbs.normalize()
     
+    # for each card pair for each player, updates belief with probability of that pair
     def InitializePrior(self):
         card_names = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"]
         for name1 in card_names:
@@ -92,6 +102,7 @@ class HMM:
         self.beliefs[player_index].normalize()
     
     
+    # used to obtain probability given hand and upcard
     def GetExpectations(self):
         
         Expectations = util.Counter()

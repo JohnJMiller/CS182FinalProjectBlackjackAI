@@ -1,3 +1,8 @@
+'''
+The Q-Learning Agent
+Alice Liu, John Miller
+'''
+
 import math, random, util
 from BlackjackPlayers import Player, Hand, Card
 

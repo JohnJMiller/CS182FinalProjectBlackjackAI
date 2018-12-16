@@ -1,3 +1,8 @@
+'''
+Functions to Play Rounds/Games
+John Miller, Alice Liu
+'''
+
 from BlackjackDeck import Deck
 from BlackjackPlayers import Card, Hand, Player
 import BlackjackPlayers
