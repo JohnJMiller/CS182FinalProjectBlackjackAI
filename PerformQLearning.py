@@ -12,14 +12,14 @@ import matplotlib.pyplot as plt
 import util
 from BasicStrategyAgent import BasicStrategyAgent
 import numpy as np
-
+import pandas as pd
 
 '''
 Q-Learning Agent
 '''
 
 #set game and training parameters
-n_episodes = 10000
+n_episodes = 100
 max_rounds = 10
 starting_money = 1000
 
@@ -95,7 +95,7 @@ plt.show()
 Testing Agent
 '''
 
-n_episodes_test = 20000
+n_episodes_test = 100
 win_rates_test = []
 earnings_test = []
 weight_sum_test= []
@@ -147,7 +147,7 @@ Random Agent
 
 #Test random agent
 
-n_episodes_rand = 20000
+n_episodes_rand = 100
 win_rates_rand = []
 earnings_rand = []
 weight_sum_rand= []

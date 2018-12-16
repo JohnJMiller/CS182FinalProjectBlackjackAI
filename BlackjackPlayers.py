@@ -152,7 +152,6 @@ class Player(object):
 		"""
 		# check if stood last round
 		if self.stand:
-			#print "We stood already"
 			return []
 
 		total_actions = []
@@ -162,25 +161,20 @@ class Player(object):
 
 			# If over 21, then bust
 			if hand.getValue() >= LIMIT:
-				#print "over limit"
 				continue
 
 			if hand.getValue() < LIMIT:
-				#print "under limit"
 				actions.append("Stand")
 
 				# Before we continue: if already doubled down, can only stand
 				if self.doubledDown:
-					#print "doubledDown"
 					continue
 
 				# Otherwise, can also hit
-				#print "we can hit"
 				actions.append("Hit")
 
 				# Can double down if hand size is 2, but can't double down if split
 				if hand.size() == 2 and not self.split:
-					#print "we can double down"
 					actions.append("Double Down")
 
 				# Splittable depending on set guidelines

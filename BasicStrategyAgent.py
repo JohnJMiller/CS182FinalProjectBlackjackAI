@@ -327,6 +327,8 @@ class BasicStrategyAgent(Player):
 		self.chart[("A","8"), "A"] = "Stand"
 		self.chart[("A","9"), "A"] = "Stand"
 
+		# fill second lookup table used for selecting actions that first table didn't catch
+
 		self.chart2 = {}
 
 		self.chart2[5, "2"] = "Hit"
@@ -531,68 +533,61 @@ class BasicStrategyAgent(Player):
 		Chooses an action for the agent
 		"""
 		
-		# print "START"
-		#print "GOT OTHER ACTION"
 		hand = self.hands[hand_index]
 		if len(hand.getCards()) == 2:
 
-			# print "IF1"
 			string_hand = (hand.getCards()[0].getName(), hand.getCards()[1].getName())
 			string_hand_rev = (hand.getCards()[1].getName(), hand.getCards()[0].getName())
 
+			# for hands in chart 1
 			if (string_hand, state["Upcard"].getName()) in self.chart:
-				# print "IF2"
-				# check if a legal action
+				# check if a legal action, then return action
 				if self.chart[(string_hand, state["Upcard"].getName())] in self.getLegalThings(state, inGame):
 					return self.chart[(string_hand, state["Upcard"].getName())]
 			elif (string_hand_rev, state["Upcard"]) in self.chart:
-				# print "ELIF1"
-				# check if a legal action
+				# check if a legal action, then return action
 				if self.chart[(string_hand_rev, state["Upcard"].getName())] in self.getLegalThings(state, inGame):
 					return self.chart[(string_hand_rev, state["Upcard"].getName())]
 
-			# try with value
+			# for hands in chart 2
 			else:
-				# print "else1"
-				# print "hand value ", state["Hand"][hand_index].getValue()
+				# face cards count as 10
 				upcard = state["Upcard"].getName() 
 				if upcard == "K" or upcard == "Q" or upcard == "J":
 					upcard = "10"
-					# print "hand value ", state["Hand"][hand_index].getValue()
+				# 17 and over values are counted the same
 				if hand.getValue() >= 17:
 					if (17, upcard) in self.chart2:
 						# check if legal action
 						if self.chart2[17, upcard] in self.getLegalThings(state, inGame):
 							return self.chart2[17, upcard]
+				# check if new value, upcard pair in chart 2
 				if (state["Hand"][hand_index].getValue(), upcard) in self.chart2:
 					if self.chart2[state["Hand"][hand_index].getValue(), upcard] in self.getLegalThings(state,inGame):
 						return self.chart2[state["Hand"].getValue(), upcard]
 
-				# temp fix
+				# catchall--should never be used
 				else:
-					# print "else2"
 					return "Stand"
 
-
+		# if more than 2 cards in hand, default to checking in chart 2
 		else:
-			# print "else2"
-			# print "hand value ", state["Hand"][hand_index].getValue()
 			upcard = state["Upcard"].getName() 
+			# as before, face cards count as 10
 			if upcard == "K" or upcard == "Q" or upcard == "J":
 				upcard = "10"
-				# print "hand value ", state["Hand"][hand_index].getValue()
+			# 17 and over values are counted the same
 			if hand.getValue() >= 17:
 				if (17, upcard) in self.chart2:
-					# check if legal action
 					if self.chart2[17, upcard] in self.getLegalThings(state, inGame):
 						return self.chart2[17, upcard]
+			# check if new value, upcard pair in chart 2
 			if (state["Hand"][hand_index].getValue(), upcard) in self.chart2:
 				if self.chart2[state["Hand"][hand_index].getValue(), upcard] in self.getLegalThings(state,inGame):
 					return self.chart2[state["Hand"].getValue(), upcard]
 
-			# temp fix
+			# catchall--should never be used
 			else:
-				# print "else2"
 				return "Stand"
 
 
