@@ -3,7 +3,6 @@ Performs the Q learning--training, testing, and random agent
 John Miller, Alice Liu
 '''
 
-#Actually perform training
 import QLearningAgent
 import PlayGame
 import BlackjackDeck
@@ -19,23 +18,25 @@ import numpy as np
 Q-Learning Agent
 '''
 
-n_episodes = 100
+#set game and training parameters
+n_episodes = 10000
 max_rounds = 10
 starting_money = 1000
 
+#initialize agent with empty weights
 weights = util.Counter()
-# 0.0001, 0.1, 0.000001
 Q_learning_agent = QLearningAgent.Agent(alpha=.01,epsilon = .2,gamma=0.00001)
 
+#initialize lists that will store results
 win_rates = []
 earnings = []
 weight_sum = []
 rounds = []
 
+
+#perform training phase
 for i in tqdm(range(n_episodes)):
-	#print '-----------------'
-	#print 'NEW ITERATION'
-	#print '------------------'
+	#select players and play game
 	PlayerList = [BasicStrategyAgent(),BasicStrategyAgent(),Q_learning_agent]
 	agent_money, win_rate, no_rounds = PlayGame.PlayGame(MaxRounds=max_rounds,players = PlayerList,AgentIndex = 2,AgentStartingMoney=starting_money)
 	
@@ -51,6 +52,14 @@ cumulative_avg_earnings_train = util.CumulativeAverage(earnings)
 
 weights = Q_learning_agent.getWeights()
 
+
+#Save weights as a csv file
+weights_df = pd.DataFrame()
+for key, value in weights.items():
+	weights_df[key] = [value]
+weights_df.to_csv("QWeights.csv")
+
+#plot results from training
 plt.plot(range(n_episodes),weight_sum)
 plt.title('Weight Sum: Train')
 plt.xlabel('Iteration')
@@ -86,52 +95,57 @@ plt.show()
 Testing Agent
 '''
 
-# n_episodes_test = 20000
-# win_rates_test = []
-# earnings_test = []
-# weight_sum_test= []
-# rounds_test = []
+n_episodes_test = 20000
+win_rates_test = []
+earnings_test = []
+weight_sum_test= []
+rounds_test = []
 
-# Q_learning_agent_test = QLearningAgent.Agent(weights=weights, alpha=0.,epsilon = 0.,gamma=.9)
+#initialize new agent object with weights from training, no learning, and no randomness in action selection
+Q_learning_agent_test = QLearningAgent.Agent(weights=weights, alpha=0.,epsilon = 0.,gamma=.9)
 
-# for i in tqdm(range(n_episodes_test)):
-# 	PlayerList = [BasicStrategyAgent(),BasicStrategyAgent(),Q_learning_agent_test]
-# 	agent_money, win_rate, no_rounds = PlayGame.PlayGame(MaxRounds=max_rounds,players = PlayerList,AgentIndex = 2,AgentStartingMoney=starting_money)
+
+#perform testing
+for i in tqdm(range(n_episodes_test)):
+	PlayerList = [BasicStrategyAgent(),BasicStrategyAgent(),Q_learning_agent_test]
+	agent_money, win_rate, no_rounds = PlayGame.PlayGame(MaxRounds=max_rounds,players = PlayerList,AgentIndex = 2,AgentStartingMoney=starting_money)
 	
-# 	#track results
-# 	win_rates_test.append(win_rate)
-# 	earnings_test.append(agent_money)
-# 	weight_sum_test.append(Q_learning_agent_test.getWeights().totalCount())
-# 	rounds_test.append(no_rounds)
-	
-# plt.plot(range(n_episodes_test),earnings_test)
-# # plt.ylim(-35000,35000)
-# plt.title('Ending Money: Test')
-# plt.xlabel('Iteration')
-# plt.ylabel('Ending Money')
-# plt.show()
+	#track results
+	win_rates_test.append(win_rate)
+	earnings_test.append(agent_money)
+	weight_sum_test.append(Q_learning_agent_test.getWeights().totalCount())
+	rounds_test.append(no_rounds)
 
-# plt.plot(range(n_episodes_test),win_rates_test)
-# plt.title('Win Rates: Test')
-# plt.xlabel('Iteration')
-# plt.ylabel('Rounds Won')
-# plt.show()
 
-# plt.hist(rounds_test)
-# plt.title('Walking Away: Test')
-# plt.show()
+#Plot test results	
+plt.plot(range(n_episodes_test),earnings_test)
+plt.title('Ending Money: Test')
+plt.xlabel('Iteration')
+plt.ylabel('Ending Money')
+plt.show()
 
-# cumulative_avg_earnings_train_test = util.CumulativeAverage(earnings_test)
-# plt.plot(range(n_episodes_test),cumulative_avg_earnings_train_test)
-# # plt.ylim(-35000,35000)
-# plt.title('Cumulative Avg Ending Money: Test')
-# plt.xlabel('Iteration')
-# plt.ylabel('Ending Money')
-# plt.show()
+plt.plot(range(n_episodes_test),win_rates_test)
+plt.title('Win Rates: Test')
+plt.xlabel('Iteration')
+plt.ylabel('Rounds Won')
+plt.show()
+
+plt.hist(rounds_test)
+plt.title('Walking Away: Test')
+plt.show()
+
+cumulative_avg_earnings_train_test = util.CumulativeAverage(earnings_test)
+plt.plot(range(n_episodes_test),cumulative_avg_earnings_train_test)
+plt.title('Cumulative Avg Ending Money: Test')
+plt.xlabel('Iteration')
+plt.ylabel('Ending Money')
+plt.show()
 
 '''
 Random Agent
 '''
+
+#Test random agent
 
 n_episodes_rand = 20000
 win_rates_rand = []
@@ -139,8 +153,11 @@ earnings_rand = []
 weight_sum_rand= []
 rounds_rand = []
 
+
+#Epsilon set to 1, so poicy doesn't matter
 Q_learning_agent_rand = QLearningAgent.Agent(weights=weights, alpha=0.,epsilon = 1.,gamma=.9)
 
+#perform random test
 for i in tqdm(range(n_episodes_rand)):
 	PlayerList = [BasicStrategyAgent(),BasicStrategyAgent(),Q_learning_agent_rand]
 	agent_money, win_rate, no_rounds = PlayGame.PlayGame(MaxRounds=max_rounds,players = PlayerList,AgentIndex = 2,AgentStartingMoney=starting_money)
@@ -150,9 +167,9 @@ for i in tqdm(range(n_episodes_rand)):
 	earnings_rand.append(agent_money)
 	weight_sum_rand.append(Q_learning_agent_rand.getWeights().totalCount())
 	rounds_rand.append(no_rounds)
-	
+
+#plot results from random agent	
 plt.plot(range(n_episodes_rand),earnings_rand)
-# plt.ylim(-35000,35000)
 plt.title('Ending Money: Random Agent')
 plt.xlabel('Iteration')
 plt.ylabel('Ending Money')
@@ -170,11 +187,12 @@ plt.show()
 
 cumulative_avg_earnings_train_rand = util.CumulativeAverage(earnings_rand)
 plt.plot(range(n_episodes_rand),cumulative_avg_earnings_train_rand)
-# plt.ylim(-35000,35000)
 plt.title('Cumulative Avg Ending Money: Random Agent')
 plt.xlabel('Iteration')
 plt.ylabel('Ending Money')
 plt.show()
 
-# print "Mean Ending Money - Test: ", np.mean(earnings_test)
+
+#print average final money
+print "Mean Ending Money - Test: ", np.mean(earnings_test)
 print "Mean Ending Money - Random: ", np.mean(earnings_rand)

@@ -6,13 +6,17 @@ Alice Liu, John Miller
 from BlackjackPlayers import Card, Hand, Player
 
 class BasicStrategyAgent(Player):
+	"""
+	Agent that plays according to basic strategy.
+	"""
 
 	def __init__(self):
 		self.doubledDown = False
 		self.hands = [Hand([])]
 		self.split = False
 		self.stand = False
-
+		
+		#Fill lookup table used for selecting actions
 		self.chart = {}
 
 		self.chart[("2","2"), "2"] = "Hit"
@@ -509,27 +513,24 @@ class BasicStrategyAgent(Player):
 
 
 	def getCharts(self):
+		"""
+		returns the lookup tables (used for the HMM)
+		"""
+		
 		return (self.chart, self.chart2)
 
-	# def getHandsFromAction(self, upcard, action):
-	# 	hand_list = []
-	# 	sum_list = []
-
-	# 	# search for working tuples
-	# 	for tple, up in self.chart:
-	# 		if up == upcard and self.chart[tple, up] == action:
-	# 			hand_list.append(tple)
-
-	# 	# search for working values
-	# 	for val, up in self.chart:
-	# 		if up == upcard and self.chart[tple, up] == action:
-	# 			sum_list.append(val)
-	# 	return (hand_list, sum_list)
 
 	def getLegalThings(self, state, inGame):
+		"""
+		returns list of legal actions
+		"""
 		return self.getLegalActions()
 
 	def getAction(self, state, hand_index,inGame):
+		"""
+		Chooses an action for the agent
+		"""
+		
 		# print "START"
 		#print "GOT OTHER ACTION"
 		hand = self.hands[hand_index]
@@ -595,13 +596,7 @@ class BasicStrategyAgent(Player):
 				return "Stand"
 
 
-		# if state[hand], state[upcard] in self.chart:
-		# 	return self.chart[state[hand], state[upcard]]
 		
-		# if state[hand].value() > 17:
-		# 	return self.chart2[17, state[upcard]]
-
-		# return self.chart2[state[hand].value(), state[upcard]]
 
 
 
